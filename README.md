@@ -44,6 +44,9 @@ DEBUG=True
 4. Run the Application
 python app.py
 
+
+Disclaimer: App does not contain any live connection to any database or API or personal information.
+
 Or run with Waitress:
 waitress-serve --host=127.0.0.1 --port=5000 app:app
 
