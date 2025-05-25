@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <link rel="stylesheet" href="/static/css/pagestyles.css">
+</head>
+<body>
+      <!-- Header -->
+      <div class="header-logo">
+        <img src="/static/Images/LOGO.png" alt="Company Logo">
+      </div>
+  <div class="container">
+    <div class="certificate-wrapper">
+
+      <div class="certificate-title">Title</div>
+
+      <!-- Certificate Info -->
+      <div class="field-row">
+        <div><strong>Certificate No:</strong> {{ certificate_number or 'N/A' }}</div>
+        <div><strong>Date:</strong> {{ current_date or 'N/A' }}</div>
+      </div>
+
+      <!-- Certification Statement -->
+     <p class="certification-text">
+        Insert text here
+      </p>
+
+      <!-- Vehicle Details -->
+      <div class="field-row">
+        <div><strong>Fleet Registration No:</strong> {{ vehicle.reg_no or 'N/A' }}</div>
+        <div><strong>Chassis No:</strong> {{ vehicle.chassis_no or 'N/A' }}</div>
+      </div>
+
+      <div class="field-row">
+        <div><strong>SIM No:</strong> {{ vehicle.sim_no or 'N/A' }}</div>
+        <div><strong>IMEI Details:</strong> {{ vehicle.imei or 'N/A' }}</div>
+      </div>
+
+      <!-- Owner Info -->
+      <p class="owner-title"><strong>Name and Address of Vehicle Owner:</strong></p>
+      <div class="underline">{{ vehicle.company_name or 'N/A' }}</div>
+
+      <!-- Signature and Stamp -->
+      <div class="signature-section">
+        <div class="signature-block">
+          <p><strong>Customer Representative Signature</strong></p>
+          <img src="/static/Images/SIGN.png" alt="Signature" class="signature-img">
+          <p><strong>Comany Name</strong></p>
+        </div>
+
+        <div class="stamp-block">
+          <img src="/static/Images/STAMP.png" alt="Company Stamp" class="stamp-img">
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <img src="/static/Images/BOTTOM.png" alt="Footer Info">
+    </div>
+  </div>
+</body>
+</html>

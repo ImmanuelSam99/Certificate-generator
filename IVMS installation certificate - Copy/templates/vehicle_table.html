@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vehicle List</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f3f3f3;
+        }
+    </style>
+</head>
+<body>
+    <h2>Vehicle List for {{ username }}</h2>
+
+    {% if vehicles %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Fleet Registration No</th>
+                    <th>SIM No</th>
+                    <th>IMEI Details</th>
+                    <th>Name and Address of Vehicle Owner</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in vehicles %}
+                    <tr>
+                        <td>{{ v.reg_no }}</td>
+                        <td>{{ v.sim_no }}</td>
+                        <td>{{ v.imei }}</td>
+                        <td>{{ v.company_name }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No vehicles found.</p>
+    {% endif %}
+</body>
+</html>

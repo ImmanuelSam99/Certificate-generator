@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Certificate Generator</title>
+  <link rel="stylesheet" href="/static/css/indexstyles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+  <div style="text-align: right; margin-bottom: 10px;">
+  <form action="{{ url_for('logout') }}" method="GET" style="display: inline;">
+    <button type="submit" class="logout-button" padding: 6px 12px; font-size: 14px; cursor: pointer;>
+      Logout
+    </button>
+  </form>
+</div>
+
+  <div class="container">
+    <header>
+      <h1>Certificate Generator</h1>
+      <p class="subtitle">Generate New Certificate</p>
+    </header>
+
+    <form id="certificateForm" action="/generate_certificate" method="POST" class="certificate-form">
+      <!-- Fleet dropdown -->
+      <div class="form-group">
+        <label for="fleet_no">Fleet Registration Number</label>
+        <select id="fleet_no" name="reg_no" required>
+          <option value="">Select Fleet</option>
+          {% for vehicle in vehicles %}
+            <option 
+              value="{{ vehicle.reg_no }}" 
+              data-imei="{{ vehicle.imei }}" 
+              data-sim="{{ vehicle.sim_no }}" 
+              data-company="{{ vehicle.company_name }}"
+            >
+              {{ vehicle.reg_no }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Vehicle details display -->
+      <div id="vehicleDetails" class="form-group">
+        <p><strong>Name and Address of Vehicle Owner:</strong> <span id="companyDisplay">-</span></p>
+        <p><strong>IMEI Details:</strong> <span id="imeiDisplay">-</span></p>
+        <p><strong>SIM No.:</strong> <span id="simDisplay">-</span></p>
+      </div>
+
+      <!-- Chassis Number input -->
+      <div class="form-group">
+        <label for="chassis_no">Chassis Number</label>
+        <input type="text" id="chassis_no" name="chassis_no" optional />
+      </div>
+
+      <!-- Current Date and Certificate Number -->
+      <div class="form-group">
+        <p><strong>Current Date:</strong> <span id="currentDateDisplay">{{ current_date }}</span></p>
+        <p><strong>Certificate NO:</strong> <span id="certificateNumberDisplay">{{ certificate_number }}</span></p>
+      </div>
+
+      <!-- Hidden fields to submit other vehicle info -->
+      <input type="hidden" name="imei" id="imeiInput" />
+      <input type="hidden" name="sim_no" id="simInput" />
+      <input type="hidden" name="company_name" id="companyInput" />
+      
+      <div class="button-group">
+        <button type="submit" class="btn-primary">Generate Certificate</button>
+        <button type="button" id="cancelBtn" class="btn-secondary">Clear</button>
+      </div>
+    </form>
+       <!-- Preview Container -->
+       <div id="previewContainer" style="margin-top: 40px;"></div>
+       <!-- Action Buttons -->
+        <div id="pdfActions" style="display: none; margin-top: 20px;">
+          <a id="viewPdfBtn" class="btn-primary" target="_blank">View Full Page</a>
+          <button id="downloadPdfBtn" class="btn-secondary">Download PDF</button>
+        </div>
+ <script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const fleetSelect = document.getElementById('fleet_no');
+    const previewContainer = document.getElementById('previewContainer');
+    const viewPdfBtn = document.getElementById('viewPdfBtn');
+    const pdfActions = document.getElementById('pdfActions');
+
+    fleetSelect.addEventListener('change', function () {
+      const selected = this.options[this.selectedIndex];
+      if (selected.value === "") {
+        document.getElementById('companyDisplay').textContent = '-';
+        document.getElementById('imeiDisplay').textContent = '-';
+        document.getElementById('simDisplay').textContent = '-';
+        document.getElementById('imeiInput').value = '';
+        document.getElementById('simInput').value = '';
+        document.getElementById('companyInput').value = '';
+        return;
+      }
+
+      const company = selected.getAttribute('data-company') || '-';
+      const imei = selected.getAttribute('data-imei') || '-';
+      const sim = selected.getAttribute('data-sim') || '-';
+
+      document.getElementById('companyDisplay').textContent = company;
+      document.getElementById('imeiDisplay').textContent = imei;
+      document.getElementById('simDisplay').textContent = sim;
+
+      document.getElementById('imeiInput').value = imei;
+      document.getElementById('simInput').value = sim;
+      document.getElementById('companyInput').value = company;
+    });
+
+    document.getElementById('cancelBtn').addEventListener('click', function () {
+      fleetSelect.value = '';
+      document.getElementById('companyDisplay').textContent = '-';
+      document.getElementById('imeiDisplay').textContent = '-';
+      document.getElementById('simDisplay').textContent = '-';
+      document.getElementById('imeiInput').value = '';
+      document.getElementById('simInput').value = '';
+      document.getElementById('companyInput').value = '';
+      document.getElementById('chassis_no').value = '';
+      document.getElementById('currentDateDisplay').textContent = '-';
+      document.getElementById('certificateNumberDisplay').textContent = '-';
+      previewContainer.innerHTML = '';
+      pdfActions.style.display = 'none';
+    });
+
+    document.getElementById('certificateForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  const form = e.target;
+  const formData = new FormData(form);
+
+  fetch(form.action, {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    
+    previewContainer.innerHTML = data.html;
+    pdfActions.style.display = 'block';
+
+    
+    document.getElementById('currentDateDisplay').textContent = data.current_date;
+    document.getElementById('certificateNumberDisplay').textContent = data.certificate_number;
+
+
+    const reg = formData.get("reg_no");
+    const imei = formData.get("imei");
+    const sim = formData.get("sim_no");
+    const company = formData.get("company_name");
+    const chassis = formData.get("chassis_no");
+
+    const params = new URLSearchParams({
+      reg_no: reg,
+      imei: imei,
+      sim_no: sim,
+      company_name: company,
+      chassis_no: chassis
+    });
+
+    viewPdfBtn.href = `/generate_certificate?${params.toString()}`;
+  })
+  .catch(err => {
+    alert("Something went wrong while generating the certificate.");
+    console.error(err);
+    previewContainer.innerHTML = '';
+    pdfActions.style.display = 'none';
+  });
+});
+
+
+    // PDF Download
+    document.getElementById('downloadPdfBtn').addEventListener('click', function () {
+      const certificate = document.querySelector('#previewContainer .certificate-wrapper');
+      if (!certificate) return alert("Please generate the certificate first.");
+
+      html2canvas(certificate, { scale: 2 }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = pageWidth;
+        const imgHeight = canvas.height * imgWidth / canvas.width;
+
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+        pdf.save('IVMS_Certificate.pdf');
+      });
+    });
+  });
+</script>
+
+  </div>
+</body>
+</html>
